@@ -52,13 +52,13 @@ const Flashcard: React.FC<FlashcardProps> = ({ item }) => {
           className="absolute w-full h-full bg-zinc-800 rounded-md shadow-2xl border border-zinc-700 border-b-8 border-b-yellow-500 p-8 flex flex-col items-center justify-center"
           style={{ backfaceVisibility: 'hidden' }}
         >
-          <div className="text-zinc-500 text-xs font-mono font-bold uppercase tracking-widest mb-4 absolute top-6">
+          <div className="text-zinc-400 text-xs font-mono font-bold uppercase tracking-widest mb-4 absolute top-6">
             [ TAP TO FLIP ]
           </div>
           <div className="text-9xl mb-6 filter drop-shadow-lg transform group-hover:scale-110 transition-transform duration-300">
             {item.emoji || '⚙️'}
           </div>
-          <h2 className="text-3xl font-mono font-bold text-zinc-100 text-center leading-tight">
+          <h2 className="text-3xl font-mono font-bold text-zinc-100 text-center leading-tight" lang="cs">
             {item.translation}
           </h2>
         </div>
@@ -83,6 +83,7 @@ const Flashcard: React.FC<FlashcardProps> = ({ item }) => {
           <button
             onClick={(e) => speakText(e, item.term)}
             className="flex items-center gap-2 bg-black text-yellow-500 px-6 py-3 rounded-md font-mono font-bold shadow-lg hover:bg-zinc-900 hover:scale-105 transition-all active:scale-95"
+            aria-label="Přehrát výslovnost"
           >
             <Volume2 size={24} />
             PRONOUNCE

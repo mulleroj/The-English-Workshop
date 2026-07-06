@@ -96,7 +96,7 @@ const QuizCard: React.FC<QuizCardProps> = ({ question, onAnswer, isAnswered, sel
       <div className="flex flex-col gap-4 mt-2 mb-4 w-full">
         {/* User's Input */}
         <div translate="no">
-           <p className="text-xs text-zinc-500 mb-2 font-mono font-bold tracking-wider uppercase">Your Answer</p>
+           <p className="text-xs text-zinc-400 mb-2 font-mono font-bold tracking-wider uppercase">Your Answer</p>
            <div className="flex flex-wrap justify-center gap-1.5">
              {userChars.map((char, i) => {
                const match = correctChars[i] && char.toLowerCase() === correctChars[i].toLowerCase();
@@ -116,7 +116,7 @@ const QuizCard: React.FC<QuizCardProps> = ({ question, onAnswer, isAnswered, sel
 
         {/* Correct Answer */}
         <div translate="no">
-           <p className="text-xs text-zinc-500 mb-2 font-mono font-bold tracking-wider uppercase">Correct Answer</p>
+           <p className="text-xs text-zinc-400 mb-2 font-mono font-bold tracking-wider uppercase">Correct Answer</p>
            <div className="flex flex-wrap justify-center gap-1.5">
              {correctChars.map((char, i) => (
                 <span key={i} className="w-8 h-10 sm:w-10 sm:h-12 flex items-center justify-center rounded-sm text-xl font-bold border-b-2 font-mono bg-zinc-800 border-yellow-500 text-yellow-500">
@@ -144,6 +144,7 @@ const QuizCard: React.FC<QuizCardProps> = ({ question, onAnswer, isAnswered, sel
           onClick={() => speakText(question.text)}
           className="p-2 bg-zinc-700 text-yellow-500 rounded-sm hover:bg-zinc-600 transition-colors"
           title="Read Question"
+          aria-label="Přečíst otázku nahlas"
         >
           <Volume2 size={24} />
         </button>
@@ -268,6 +269,7 @@ const QuizCard: React.FC<QuizCardProps> = ({ question, onAnswer, isAnswered, sel
             onClick={() => speakText(question.correctAnswer)}
             className="p-2 bg-zinc-800 hover:bg-zinc-700 rounded-full transition-colors border border-zinc-600 shadow-sm text-yellow-500"
             title="Listen to pronunciation"
+            aria-label="Přehrát výslovnost"
           >
              <Volume2 size={20} />
           </button>

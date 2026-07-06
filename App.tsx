@@ -336,6 +336,7 @@ export default function App() {
               ${badge.score > 0 ? badge.activeColor : badge.color}
             `}
             title={`${badge.id.toUpperCase()}: ${badge.score} Stars`}
+            aria-label={`${badge.id} difficulty: ${badge.score} stars`}
           >
             {badge.score > 0 ? badge.score : badge.label}
           </div>
@@ -424,6 +425,7 @@ export default function App() {
                    selectedCourse === 'pre-intermediate' ? 'text-red-500 hover:border-red-500/50' : 'text-yellow-500 hover:border-yellow-500/50'
                 }`}
                 title="Back"
+                aria-label="Zpět na výběr lekce"
               >
                 <ArrowLeft size={24} />
               </button>
@@ -450,8 +452,8 @@ export default function App() {
                 <span className="font-bold text-yellow-500">{stats.score}</span>
               </div>
               <div className="flex items-center gap-2 bg-zinc-800 border border-zinc-700 px-3 py-1 rounded-sm">
-                <span className="text-zinc-500">Q:</span>
-                <span className="font-bold">{currentQuestionIndex + 1}<span className="text-zinc-600">/</span>{questions.length}</span>
+                <span className="text-zinc-400">Q:</span>
+                <span className="font-bold">{currentQuestionIndex + 1}<span className="text-zinc-400">/</span>{questions.length}</span>
               </div>
             </div>
           )}
@@ -461,15 +463,17 @@ export default function App() {
               <button 
                 onClick={() => setShowStudentInfoModal(true)} 
                 className="flex items-center gap-2 bg-transparent hover:bg-zinc-800 border border-zinc-600 px-3 py-1.5 rounded-sm text-sm font-mono font-bold transition-colors text-zinc-400 hover:text-zinc-200"
-                title="Student Guide"
+                title="Návod pro žáky"
+                aria-label="Otevřít návod pro žáky"
               >
                 <GraduationCap size={16} />
-                <span className="hidden sm:inline">STUDENT</span>
+                <span className="hidden sm:inline">NÁVOD</span>
               </button>
               <button 
                 onClick={() => setShowInfoModal(true)} 
                 className="flex items-center gap-2 bg-transparent hover:bg-zinc-800 border border-zinc-600 px-3 py-1.5 rounded-sm text-sm font-mono font-bold transition-colors text-zinc-400 hover:text-zinc-200"
                 title="Teacher Guide"
+                aria-label="Otevřít příručku pro učitele"
               >
                 <Info size={16} />
                 <span className="hidden sm:inline">TEACHER</span>
@@ -477,6 +481,7 @@ export default function App() {
               <button 
                 onClick={() => setShowQrModal(true)} 
                 className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 border border-blue-600 hover:border-blue-500 px-3 py-1.5 rounded-sm text-sm font-mono font-bold transition-colors text-white shadow-lg hover:shadow-blue-500/20"
+                aria-label="Zobrazit QR kód pro připojení"
               >
                 <QrCode size={16} />
                 <span className="hidden sm:inline">CONNECT</span>
@@ -493,7 +498,7 @@ export default function App() {
           <div className="max-w-4xl w-full animate-fade-in flex flex-col items-center">
              <div className="text-center mb-8">
                 <h2 className="text-3xl md:text-5xl font-mono font-black text-zinc-100 mb-2 uppercase tracking-tight">ENGLISH WORKSHOP HUB</h2>
-                <p className="text-zinc-500 font-mono text-sm">SELECT COLOUR ACCORDING TO YOUR BOOK</p>
+                <p className="text-zinc-400 font-mono text-sm">SELECT COLOUR ACCORDING TO YOUR BOOK</p>
              </div>
 
              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
@@ -535,7 +540,10 @@ export default function App() {
           <div className="max-w-5xl w-full animate-fade-in pb-8">
              <div className="text-center mb-4">
                 <h2 className="text-3xl md:text-4xl font-mono font-black text-zinc-100 mb-2 uppercase tracking-tight">Select Module</h2>
-                <p className="text-zinc-500 font-mono text-sm">/ SYSTEM READY / SELECT TOPIC TO BEGIN DIAGNOSTICS</p>
+                <p className="text-zinc-400 font-mono text-sm">/ SYSTEM READY / SELECT TOPIC TO BEGIN /</p>
+                <p className="text-zinc-400 font-mono text-xs mt-3 select-none">
+                  E = Easy · M = Medium · H = Hard · X = Mix
+                </p>
              </div>
 
              {/* Sticky Tab Navigation: Physical Switch Look */}
@@ -571,8 +579,8 @@ export default function App() {
 
              {filteredLessons.length === 0 ? (
                  <div className="text-center p-12 border-2 border-dashed border-zinc-700 rounded-md">
-                     <p className="text-zinc-500 font-mono text-lg">NO MODULES LOADED FOR THIS LEVEL</p>
-                     <p className="text-zinc-600 text-sm mt-2">Content coming soon...</p>
+                     <p className="text-zinc-400 font-mono text-lg">NO MODULES LOADED FOR THIS LEVEL</p>
+                     <p className="text-zinc-500 text-sm mt-2">Content coming soon...</p>
                  </div>
              ) : (
                 <>
@@ -602,7 +610,7 @@ export default function App() {
              <div className="text-center mb-8">
                 <div className="text-6xl mb-4 animate-bounce-in">{selectedLesson.emoji}</div>
                 <h2 className="text-3xl font-mono font-black text-zinc-100 mb-2 uppercase">{selectedLesson.title}</h2>
-                <p className="text-zinc-500 font-mono">SELECT OPERATION MODE</p>
+                <p className="text-zinc-400 font-mono">SELECT OPERATION MODE</p>
              </div>
 
              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -622,9 +630,9 @@ export default function App() {
                       <GraduationCap size={48} />
                    </div>
                    <div className="text-center">
-                      <h3 className="text-2xl font-mono font-bold text-zinc-200 mb-1 group-hover:text-yellow-500">MANUAL</h3>
-                      <p className="text-sm text-zinc-500">FLASHCARD DATABASE</p>
-                      {!Array.isArray(selectedLesson.content) && <p className="text-xs text-red-500 mt-2 font-mono">(UNAVAILABLE)</p>}
+                       <h3 className="text-2xl font-mono font-bold text-zinc-200 mb-1 group-hover:text-yellow-500">LEARN</h3>
+                       <p className="text-sm text-zinc-400">Flashcards</p>
+                       {!Array.isArray(selectedLesson.content) && <p className="text-xs text-red-500 mt-2 font-mono">(UNAVAILABLE)</p>}
                    </div>
                 </button>
 
@@ -637,8 +645,8 @@ export default function App() {
                       <Play size={48} fill="currentColor" />
                    </div>
                    <div className="text-center">
-                      <h3 className="text-2xl font-mono font-bold text-zinc-200 mb-1 group-hover:text-yellow-500">DIAGNOSTIC</h3>
-                      <p className="text-sm text-zinc-500">QUIZ & TESTING</p>
+                       <h3 className="text-2xl font-mono font-bold text-zinc-200 mb-1 group-hover:text-yellow-500">TEST</h3>
+                       <p className="text-sm text-zinc-400">Quiz</p>
                    </div>
                 </button>
              </div>
@@ -692,7 +700,7 @@ export default function App() {
             <h1 className="text-2xl font-mono font-black text-zinc-100 mb-2 tracking-tight uppercase">
               {selectedLesson.title}
             </h1>
-            <p className="text-zinc-500 mb-8 font-mono text-sm">
+            <p className="text-zinc-400 mb-8 font-mono text-sm">
               SELECT DIFFICULTY LEVEL
             </p>
 
@@ -812,6 +820,7 @@ export default function App() {
               <button 
                 onClick={() => setShowQrModal(false)}
                 className="absolute top-4 right-4 text-zinc-500 hover:text-white bg-zinc-700 rounded-sm p-1"
+                aria-label="Zavřít QR kód"
               >
                 <X size={20} />
               </button>
@@ -847,15 +856,16 @@ export default function App() {
                      TEACHER'S GUIDE
                    </h3>
                    <button 
-                     onClick={() => setShowInfoModal(false)}
-                     className="text-zinc-500 hover:text-white bg-zinc-700 rounded-sm p-1 transition-colors"
-                   >
-                     <X size={20} />
-                   </button>
+                      onClick={() => setShowInfoModal(false)}
+                      className="text-zinc-500 hover:text-white bg-zinc-700 rounded-sm p-1 transition-colors"
+                      aria-label="Zavřít příručku pro učitele"
+                    >
+                      <X size={20} />
+                    </button>
                 </div>
                 
                 {/* Modal Content - Scrollable */}
-                <div className="p-6 overflow-y-auto text-zinc-300 font-sans leading-relaxed text-sm md:text-base">
+                <div className="p-6 overflow-y-auto text-zinc-300 font-sans leading-relaxed text-sm md:text-base" lang="cs">
                    
                    <div className="mb-6">
                       <h4 className="text-yellow-500 font-mono font-bold mb-2 uppercase border-b border-zinc-700 pb-1">O APLIKACI</h4>
@@ -960,15 +970,16 @@ export default function App() {
                      HOW TO USE
                    </h3>
                    <button 
-                     onClick={() => setShowStudentInfoModal(false)}
-                     className="text-zinc-500 hover:text-white bg-zinc-700 rounded-sm p-1 transition-colors"
-                   >
-                     <X size={20} />
-                   </button>
+                      onClick={() => setShowStudentInfoModal(false)}
+                      className="text-zinc-500 hover:text-white bg-zinc-700 rounded-sm p-1 transition-colors"
+                      aria-label="Zavřít návod"
+                    >
+                      <X size={20} />
+                    </button>
                 </div>
                 
                 {/* Modal Content - Scrollable */}
-                <div className="p-6 overflow-y-auto text-zinc-300 font-sans leading-relaxed text-sm md:text-base">
+                <div className="p-6 overflow-y-auto text-zinc-300 font-sans leading-relaxed text-sm md:text-base" lang="cs">
                    
                    <p className="mb-4">
                      👋 Vítej v dílně! Tato aplikace ti pomůže zvládnout slovní zásobu podle učebnice, kterou používáš v hodině angličtiny.
@@ -1020,7 +1031,7 @@ export default function App() {
       </main>
 
       {/* Footer */}
-      <footer className="p-4 text-center text-zinc-600 text-xs font-mono uppercase border-t border-zinc-800">
+      <footer className="p-4 text-center text-zinc-400 text-xs font-mono uppercase border-t border-zinc-800">
         SYSTEM ONLINE • THE ENGLISH WORKSHOP • VER 2.1
       </footer>
     </div>
