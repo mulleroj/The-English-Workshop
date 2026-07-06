@@ -1,7 +1,8 @@
 
 import React, { useState, useCallback, useEffect } from 'react';
-import { GameState, QuizQuestion, PlayerStats, DifficultyLevel, Lesson, LessonProgress, VocabItem, CourseLevel } from './types';
+import { GameState, QuizQuestion, PlayerStats, DifficultyLevel, Lesson, LessonProgress, VocabItem, CourseLevel, SavedProgress } from './types';
 import { generateQuestions } from './services/gemini';
+import { loadProgress, writeProgress, clearProgress, updateLastSelection, updateLessonScore, createEmptyProgress } from './services/progressStorage';
 import { lessons } from './data/lessons';
 import QuizCard from './components/QuizCard';
 import Flashcard from './components/Flashcard';
@@ -75,17 +76,28 @@ export default function App() {
   const [flashcardDeck, setFlashcardDeck] = useState<VocabItem[]>([]); // State for shuffled cards
   
   // Progress State
-  const [progress, setProgress] = useState<Record<string, LessonProgress>>({});
+  const [progress, setProgress] = useState<SavedProgress>(createEmptyProgress());
 
-  // Load progress from LocalStorage on mount
+  // Load progress from LocalStorage on mount and restore navigation
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        setProgress(JSON.parse(saved));
+    const loaded = loadProgress();
+    setProgress(loaded);
+
+    // Restore last textbook/lesson selection if valid
+    if (loaded.lastSelection && loaded.lastSelection.bookId) {
+      const bookId = loaded.lastSelection.bookId;
+      setSelectedCourse(bookId);
+      setGameState(GameState.LESSON_SELECT);
+      
+      if (loaded.lastSelection.lessonId) {
+        const lessonId = loaded.lastSelection.lessonId;
+        // Verify that the lesson exists in the dataset and belongs to the selected textbook
+        const matchedLesson = lessons.find(l => l.id === lessonId && l.course === bookId);
+        if (matchedLesson) {
+          setSelectedLesson(matchedLesson);
+          setGameState(GameState.MODE_SELECT);
+        }
       }
-    } catch (e) {
-      console.error("Failed to load progress", e);
     }
   }, []);
 
@@ -100,51 +112,45 @@ export default function App() {
   }, []);
 
   const saveProgress = (lessonId: string, correct: number, total: number, difficultyPlayed: DifficultyLevel) => {
-    if (total === 0) return;
+    if (total === 0 || !selectedCourse) return;
     
-    // Determine stars based on percentage
-    const percentage = (correct / total) * 100;
-    let stars = 0;
-    if (percentage >= 90) stars = 3;
-    else if (percentage >= 70) stars = 2;
-    else stars = 1; // Played but failed to reach 70% gets 1 star participation
-
     setProgress(prev => {
-      const currentLessonProgress = prev[lessonId] || {
-        scores: { easy: 0, medium: 0, hard: 0, mixed: 0 },
-        lastUpdated: 0
-      };
-
-      // Only update if new stars are higher or equal
-      const currentStarsForDiff = currentLessonProgress.scores[difficultyPlayed] || 0;
-      
-      if (stars > currentStarsForDiff) {
-        const newProgress = {
-          ...prev,
-          [lessonId]: {
-            scores: {
-              ...currentLessonProgress.scores,
-              [difficultyPlayed]: stars
-            },
-            lastUpdated: Date.now()
-          }
-        };
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(newProgress));
-        return newProgress;
-      }
-      
-      return prev;
+      const next = updateLessonScore(prev, selectedCourse, lessonId, difficultyPlayed, correct, total);
+      writeProgress(next);
+      return next;
     });
+  };
+
+  const handleResetProgress = () => {
+    const confirm = window.confirm("Opravdu chcete vymazat pokrok uložený na tomto zařízení?");
+    if (confirm) {
+      clearProgress();
+      setProgress(createEmptyProgress());
+      setSelectedCourse(null);
+      setSelectedLesson(null);
+      setGameState(GameState.COURSE_SELECT);
+      setShowStudentInfoModal(false);
+    }
   };
 
   const selectCourse = (course: CourseLevel) => {
     setSelectedCourse(course);
     setGameState(GameState.LESSON_SELECT);
+    setProgress(prev => {
+      const next = updateLastSelection(prev, course, null);
+      writeProgress(next);
+      return next;
+    });
   };
 
   const selectLesson = (lesson: Lesson) => {
     setSelectedLesson(lesson);
     setGameState(GameState.MODE_SELECT); 
+    setProgress(prev => {
+      const next = updateLastSelection(prev, lesson.course, lesson.id);
+      writeProgress(next);
+      return next;
+    });
   };
 
   const handleModeSelect = (mode: 'learn' | 'test') => {
@@ -165,6 +171,11 @@ export default function App() {
     if (gameState === GameState.LESSON_SELECT) {
         setGameState(GameState.COURSE_SELECT);
         setSelectedCourse(null);
+        setProgress(prev => {
+          const next = updateLastSelection(prev, null, null);
+          writeProgress(next);
+          return next;
+        });
     } 
     // Otherwise go back to Lesson Select
     else {
@@ -173,6 +184,11 @@ export default function App() {
         setQuestions([]);
         setIncorrectQuestions([]);
         setFlashcardDeck([]); // Clear deck
+        setProgress(prev => {
+          const next = updateLastSelection(prev, selectedCourse, null);
+          writeProgress(next);
+          return next;
+        });
     }
   };
 
@@ -317,13 +333,20 @@ export default function App() {
     }, 3500);
   };
 
-  const DifficultyBadges = ({ scores }: { scores: { easy: number, medium: number, hard: number, mixed: number } }) => {
+  const DifficultyBadges = ({ progressData }: { progressData: { badges: Record<DifficultyLevel, boolean>, bestScores: Record<DifficultyLevel, any> } }) => {
+    const getStars = (bestScore: any) => {
+      if (!bestScore) return 0;
+      if (bestScore.percent >= 90) return 3;
+      if (bestScore.percent >= 70) return 2;
+      return 1;
+    };
+
     // Badges designed as status lights
     const badges = [
-      { id: 'easy', label: 'E', color: 'bg-zinc-900 text-zinc-600 border-zinc-700', activeColor: 'bg-emerald-900 text-emerald-400 border-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]', score: scores.easy },
-      { id: 'medium', label: 'M', color: 'bg-zinc-900 text-zinc-600 border-zinc-700', activeColor: 'bg-yellow-900 text-yellow-400 border-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.5)]', score: scores.medium },
-      { id: 'hard', label: 'H', color: 'bg-zinc-900 text-zinc-600 border-zinc-700', activeColor: 'bg-red-900 text-red-400 border-red-500 shadow-[0_0_10px_rgba(239,68,68,0.5)]', score: scores.hard },
-      { id: 'mixed', label: 'X', color: 'bg-zinc-900 text-zinc-600 border-zinc-700', activeColor: 'bg-purple-900 text-purple-400 border-purple-500 shadow-[0_0_10px_rgba(168,85,247,0.5)]', score: scores.mixed },
+      { id: 'easy', label: 'E', color: 'bg-zinc-900 text-zinc-600 border-zinc-700', activeColor: 'bg-emerald-900 text-emerald-400 border-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]', active: progressData.badges.easy, stars: getStars(progressData.bestScores.easy) },
+      { id: 'medium', label: 'M', color: 'bg-zinc-900 text-zinc-600 border-zinc-700', activeColor: 'bg-yellow-900 text-yellow-400 border-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.5)]', active: progressData.badges.medium, stars: getStars(progressData.bestScores.medium) },
+      { id: 'hard', label: 'H', color: 'bg-zinc-900 text-zinc-600 border-zinc-700', activeColor: 'bg-red-900 text-red-400 border-red-500 shadow-[0_0_10px_rgba(239,68,68,0.5)]', active: progressData.badges.hard, stars: getStars(progressData.bestScores.hard) },
+      { id: 'mixed', label: 'X', color: 'bg-zinc-900 text-zinc-600 border-zinc-700', activeColor: 'bg-purple-900 text-purple-400 border-purple-500 shadow-[0_0_10px_rgba(168,85,247,0.5)]', active: progressData.badges.mixed, stars: getStars(progressData.bestScores.mixed) },
     ];
 
     return (
@@ -333,12 +356,12 @@ export default function App() {
             key={badge.id} 
             className={`
               w-6 h-6 rounded-sm flex items-center justify-center text-[10px] font-mono font-bold border
-              ${badge.score > 0 ? badge.activeColor : badge.color}
+              ${badge.active ? badge.activeColor : badge.color}
             `}
-            title={`${badge.id.toUpperCase()}: ${badge.score} Stars`}
-            aria-label={`${badge.id} difficulty: ${badge.score} stars`}
+            title={`${badge.id.toUpperCase()}: ${badge.stars} Stars`}
+            aria-label={`${badge.id} difficulty: ${badge.stars} stars`}
           >
-            {badge.score > 0 ? badge.score : badge.label}
+            {badge.active ? badge.stars : badge.label}
           </div>
         ))}
       </div>
@@ -352,7 +375,10 @@ export default function App() {
 
   const renderLessonCard = (lesson: Lesson) => {
     const Icon = IconMap[lesson.icon] || Grid;
-    const lessonProgress = progress[lesson.id] || { scores: { easy: 0, medium: 0, hard: 0, mixed: 0 }, lastUpdated: 0 };
+    const lessonProgress = progress.lessons[lesson.course]?.[lesson.id] || {
+      badges: { easy: false, medium: false, hard: false, mixed: false },
+      bestScores: { easy: null, medium: null, hard: null, mixed: null }
+    };
     
     // Determine visual style based on Course Level
     // Elementary = Green theme
@@ -394,7 +420,7 @@ export default function App() {
           <p className="text-zinc-400 text-xs md:text-sm leading-relaxed flex-grow line-clamp-2">{lesson.description}</p>
           
           <div className="mt-auto pt-3 border-t border-zinc-700/50">
-             <DifficultyBadges scores={lessonProgress.scores} />
+             <DifficultyBadges progressData={lessonProgress} />
           </div>
         </div>
       </button>
@@ -1002,7 +1028,7 @@ export default function App() {
                       </ol>
                    </div>
 
-                   <div>
+                   <div className="mb-6">
                       <h4 className="text-blue-400 font-mono font-bold mb-2 uppercase border-b border-zinc-700 pb-1">TIPY & TRIKY</h4>
                       <ul className="space-y-2 list-disc ml-5">
                          <li>
@@ -1015,6 +1041,23 @@ export default function App() {
                             <strong className="text-zinc-100">🔊 Výslovnost:</strong> U kartiček si můžeš pustit zvuk, abys věděl, jak se to čte.
                          </li>
                       </ul>
+                   </div>
+
+                   <div className="mt-6 border-t border-zinc-700/50 pt-4">
+                      <h4 className="text-red-400 font-mono font-bold mb-2 uppercase flex items-center gap-2">
+                         <RotateCcw size={18} />
+                         MAZÁNÍ POKROKU
+                      </h4>
+                      <p className="mb-3 text-zinc-400 text-xs leading-relaxed">
+                         Pokud chceš začít znovu a vymazat všechny své získané hvězdičky a odznaky, můžeš resetovat pokrok tlačítkem níže.
+                      </p>
+                      <button 
+                         onClick={handleResetProgress}
+                         className="flex items-center justify-center gap-2 w-full bg-zinc-900 hover:bg-red-950 border border-zinc-700 hover:border-red-800 text-zinc-400 hover:text-red-400 py-2 rounded-sm text-xs font-mono font-bold transition-all cursor-pointer"
+                      >
+                         <RotateCcw size={14} />
+                         Vymazat můj pokrok
+                      </button>
                    </div>
 
                 </div>

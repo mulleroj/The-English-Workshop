@@ -59,3 +59,26 @@ export interface LessonProgress {
   };
   lastUpdated: number; // Timestamp
 }
+
+export interface BestScore {
+  score: number;
+  total: number;
+  percent: number;
+  completedAt: string; // ISO date string
+}
+
+export interface SavedLessonProgress {
+  badges: Record<DifficultyLevel, boolean>;
+  bestScores: Record<DifficultyLevel, BestScore | null>;
+}
+
+export interface LastSelection {
+  bookId: CourseLevel | null;
+  lessonId: string | null;
+}
+
+export interface SavedProgress {
+  version: number;
+  lastSelection: LastSelection;
+  lessons: Record<string, Record<string, SavedLessonProgress>>; // Record<bookId, Record<lessonId, SavedLessonProgress>>
+}
