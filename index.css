@@ -1,3 +1,26 @@
-/* The English Workshop - Global Styles */
-/* Main styles are handled via Tailwind CDN in index.html */
-/* This file exists to prevent 404 errors */
+@import "tailwindcss";
+
+/* Roboto Mono Self-Hosted Fonts */
+@font-face {
+  font-family: 'Roboto Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/RobotoMono-Regular.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Roboto Mono';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('/fonts/RobotoMono-Medium.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Roboto Mono';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/fonts/RobotoMono-Bold.woff2') format('woff2');
+}

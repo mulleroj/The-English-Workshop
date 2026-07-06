@@ -1,9 +1,16 @@
-const CACHE_NAME = 'english-workshop-v1';
+const CACHE_NAME = 'english-workshop-v3';
 
 // Files to cache for offline use
 const STATIC_ASSETS = [
   '/',
   '/index.html',
+  '/manifest.json',
+  '/icons/icon-192.png',
+  '/icons/icon-512.png',
+  '/fonts/RobotoMono-Regular.woff2',
+  '/fonts/RobotoMono-Medium.woff2',
+  '/fonts/RobotoMono-Bold.woff2',
+  '/qr/english-workshop-url.png',
 ];
 
 // Install: cache static shell

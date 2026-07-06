@@ -831,7 +831,7 @@ export default function App() {
                 
                 <div className="bg-white p-2 rounded-sm border-4 border-yellow-500 mb-6 inline-block">
                   <img 
-                    src={`https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(window.location.href)}&color=000000`} 
+                    src="/qr/english-workshop-url.png" 
                     alt="Scan to join"
                     className="w-full h-auto" 
                   />
