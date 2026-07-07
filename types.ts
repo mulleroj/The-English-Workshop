@@ -40,7 +40,8 @@ export enum GameState {
   LOADING = 'LOADING',
   PLAYING = 'PLAYING',
   GAME_OVER = 'GAME_OVER',
-  ERROR = 'ERROR'
+  ERROR = 'ERROR',
+  PRINT_VIEW = 'PRINT_VIEW'
 }
 
 export interface PlayerStats {
