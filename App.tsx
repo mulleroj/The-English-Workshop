@@ -690,7 +690,7 @@ export default function App() {
         {/* FLASHCARDS STATE */}
         {gameState === GameState.FLASHCARDS && flashcardDeck.length > 0 && (
           <div className="w-full max-w-lg animate-fade-in flex flex-col items-center">
-             <div className="bg-zinc-800 border border-zinc-700 px-4 py-2 rounded-sm shadow-sm mb-6 font-mono font-bold text-yellow-500 flex items-center gap-2">
+             <div className="bg-zinc-800 border border-zinc-700 px-4 py-2 rounded-sm shadow-sm mb-4 sm:mb-6 font-mono font-bold text-yellow-500 flex items-center gap-2">
                 <GraduationCap size={18} />
                 <span>ITEM {currentFlashcardIndex + 1} / {flashcardDeck.length}</span>
              </div>
@@ -700,7 +700,7 @@ export default function App() {
                 item={flashcardDeck[currentFlashcardIndex]} 
              />
 
-             <div className="flex justify-between items-center w-full mt-8 gap-4">
+             <div className="flex justify-between items-center w-full mt-4 sm:mt-8 gap-4">
                 <Button 
                    onClick={() => setCurrentFlashcardIndex(prev => Math.max(0, prev - 1))}
                    disabled={currentFlashcardIndex === 0}
