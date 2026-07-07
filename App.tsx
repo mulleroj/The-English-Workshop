@@ -991,6 +991,24 @@ export default function App() {
                    </div>
 
                    <div className="mb-6">
+                      <h4 className="text-yellow-500 font-mono font-bold mb-2 uppercase border-b border-zinc-700 pb-1 flex items-center gap-2">
+                          <Printer size={18} />
+                          TISK SLOVÍČEK K LEKCI
+                       </h4>
+                       <p className="mb-2">Učitel si může rychle vytisknout slovíčka z vybrané lekce pro práci v hodině, suplování nebo pro žáky bez telefonu.</p>
+                       <strong className="text-zinc-200 block mb-1">Postup:</strong>
+                       <ol className="list-decimal ml-5 mb-3 space-y-1">
+                          <li>Vyberte učebnici nebo úroveň.</li>
+                          <li>Vyberte konkrétní lekci.</li>
+                          <li>Na obrazovce s volbou režimu (LEARN/TEST) klikněte na <strong className="font-mono text-xs bg-zinc-900 border border-zinc-700 px-1.5 py-0.5 rounded text-yellow-500">PRINT VOCABULARY</strong>.</li>
+                          <li>Otevře se tisková stránka se slovíčky dané lekce.</li>
+                          <li>Klikněte na <strong className="text-zinc-100">Vytisknout slovíčka</strong> (nebo použijte tisk v prohlížeči Ctrl+P).</li>
+                       </ol>
+                       <p className="mb-2"><strong>Tisková stránka obsahuje:</strong> anglické slovíčko, český překlad, políčko „Umím“ a prázdné místo na poznámky.</p>
+                       <p className="text-zinc-400 text-xs italic">Tisk funguje z lokálních dat aplikace (i offline) a neobsahuje žádné výsledky žáka, skóre ani osobní údaje.</p>
+                    </div>
+
+                   <div className="mb-6">
                       <h4 className="text-yellow-500 font-mono font-bold mb-2 uppercase border-b border-zinc-700 pb-1">🏆 HODNOCENÍ A ODZNAKY</h4>
                       <p className="mb-2">Aplikace motivuje studenty sbíráním odznaků za každou lekci:</p>
                       <ul className="space-y-2 ml-1">
