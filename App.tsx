@@ -61,6 +61,7 @@ export default function App() {
   const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
   const [questions, setQuestions] = useState<QuizQuestion[]>([]);
   const [incorrectQuestions, setIncorrectQuestions] = useState<QuizQuestion[]>([]); // Track mistakes
+  const [isReviewMode, setIsReviewMode] = useState(false);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [stats, setStats] = useState<PlayerStats>({ score: 0, streak: 0, totalQuestions: 0, correctAnswers: 0 });
   const [isAnswered, setIsAnswered] = useState(false);
@@ -183,6 +184,7 @@ export default function App() {
         setSelectedLesson(null);
         setQuestions([]);
         setIncorrectQuestions([]);
+        setIsReviewMode(false);
         setFlashcardDeck([]); // Clear deck
         setProgress(prev => {
           const next = updateLastSelection(prev, selectedCourse, null);
@@ -198,6 +200,7 @@ export default function App() {
     setGameState(GameState.LOADING);
     setStats({ score: 0, streak: 0, totalQuestions: 0, correctAnswers: 0 });
     setIncorrectQuestions([]); // Clear mistakes on fresh start
+    setIsReviewMode(false); // Reset review mode on fresh start
     setCurrentQuestionIndex(0);
     setIsAnswered(false);
     setSelectedAnswer(null);
@@ -214,8 +217,13 @@ export default function App() {
 
   // Review Mode Logic
   const startReview = () => {
-    setQuestions(incorrectQuestions); // Set questions to the ones missed
+    if (incorrectQuestions.length === 0) return;
+
+    // Create a copy of the incorrect questions array to avoid mutation
+    const reviewQuestions = [...incorrectQuestions];
+    setQuestions(reviewQuestions); // Set questions to the ones missed
     setIncorrectQuestions([]); // Reset mistake tracking for this new round
+    setIsReviewMode(true); // Flag review mode
     setStats({ score: 0, streak: 0, totalQuestions: 0, correctAnswers: 0 });
     setCurrentQuestionIndex(0);
     setIsAnswered(false);
@@ -325,7 +333,7 @@ export default function App() {
         setIsAnswered(false);
         setSelectedAnswer(null);
       } else {
-        if (selectedLesson && questions.length >= 5) {
+        if (!isReviewMode && selectedLesson && questions.length >= 5) {
             saveProgress(selectedLesson.id, newCorrectAnswers, questions.length, difficulty);
         }
         setGameState(GameState.GAME_OVER);
@@ -772,12 +780,20 @@ export default function App() {
 
         {/* PLAYING STATE */}
         {gameState === GameState.PLAYING && questions.length > 0 && (
-          <QuizCard 
-            question={questions[currentQuestionIndex]}
-            onAnswer={handleAnswer}
-            isAnswered={isAnswered}
-            selectedAnswer={selectedAnswer}
-          />
+          <div className="w-full max-w-lg flex flex-col items-center">
+            {isReviewMode && (
+              <div className="w-full mb-4 bg-yellow-950/60 border border-yellow-500/30 text-yellow-500 px-4 py-2.5 rounded-sm flex items-center justify-center gap-2 font-mono font-bold text-xs uppercase tracking-wide">
+                <RefreshCw size={14} className="animate-spin-slow" />
+                <span>Practice Mode: Retrying Mistakes / Procvičení chyb</span>
+              </div>
+            )}
+            <QuizCard 
+              question={questions[currentQuestionIndex]}
+              onAnswer={handleAnswer}
+              isAnswered={isAnswered}
+              selectedAnswer={selectedAnswer}
+            />
+          </div>
         )}
 
         {/* GAME OVER STATE */}
@@ -790,11 +806,15 @@ export default function App() {
             </div>
             
             <h2 className="text-3xl font-mono font-bold text-zinc-100 mb-2 uppercase">
-              {stats.correctAnswers === questions.length ? "SYSTEM PERFECT" : "SESSION COMPLETE"}
+              {stats.correctAnswers === questions.length 
+                ? "SYSTEM PERFECT" 
+                : (isReviewMode ? "PRACTICE COMPLETE" : "SESSION COMPLETE")
+              }
             </h2>
             <p className="text-zinc-400 mb-8 font-mono text-sm">
               Module: {selectedLesson?.title}
               {incorrectQuestions.length > 0 && <span className="block text-red-500 mt-2 font-bold">{incorrectQuestions.length} ERRORS DETECTED</span>}
+              {incorrectQuestions.length === 0 && <span className="block text-emerald-400 mt-2 font-bold">BEZ CHYB / NO ERRORS</span>}
             </p>
             
             <div className="grid grid-cols-2 gap-4 mb-8">
@@ -811,10 +831,13 @@ export default function App() {
             <div className="space-y-3">
               {/* Review Mistakes Button - Only visible if there are errors */}
               {incorrectQuestions.length > 0 && (
-                <Button onClick={startReview} variant="danger" fullWidth className="">
-                  <div className="flex items-center justify-center gap-2">
-                    <RefreshCw size={20} />
-                    DEBUG ERRORS ({incorrectQuestions.length})
+                <Button onClick={startReview} variant="danger" fullWidth>
+                  <div className="flex flex-col items-center">
+                    <div className="flex items-center justify-center gap-2">
+                      <RefreshCw size={20} />
+                      <span className="font-mono font-bold text-sm uppercase">Retry wrong answers ({incorrectQuestions.length})</span>
+                    </div>
+                    <span className="text-[10px] opacity-75 font-sans font-normal mt-0.5">Zopakovat jen chyby</span>
                   </div>
                 </Button>
               )}
