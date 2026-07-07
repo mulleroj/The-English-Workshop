@@ -7,7 +7,8 @@ import { lessons } from './data/lessons';
 import QuizCard from './components/QuizCard';
 import Flashcard from './components/Flashcard';
 import Button from './components/Button';
-import { Users, Star, RotateCcw, Award, Play, Signal, QrCode, X, ArrowLeft, Globe, BookOpen, Music, MapPin, Grid, Smile, Shirt, Utensils, RefreshCw, Building2, Tent, Laptop, Trophy, Home, Map, GraduationCap, ChevronLeft, ChevronRight, Wrench, Hammer, Mountain, Clapperboard, CloudLightning, Briefcase, Plane, CreditCard, Siren, Microscope, Sunset, Info, CloudRain, IdCard, Clock, PawPrint } from 'lucide-react';
+import VocabularyPrintView from './components/VocabularyPrintView';
+import { Users, Star, RotateCcw, Award, Play, Signal, QrCode, X, ArrowLeft, Globe, BookOpen, Music, MapPin, Grid, Smile, Shirt, Utensils, RefreshCw, Building2, Tent, Laptop, Trophy, Home, Map, GraduationCap, ChevronLeft, ChevronRight, Wrench, Hammer, Mountain, Clapperboard, CloudLightning, Briefcase, Plane, CreditCard, Siren, Microscope, Sunset, Info, CloudRain, IdCard, Clock, PawPrint, Printer } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
 // Helper to map icon string to Component
@@ -684,6 +685,18 @@ export default function App() {
                    </div>
                 </button>
              </div>
+
+             {/* Print View Button */}
+             <div className="mt-8 flex justify-center">
+               <button
+                 onClick={() => setGameState(GameState.PRINT_VIEW)}
+                 className="flex items-center gap-2 bg-zinc-800/80 border border-zinc-700 hover:border-yellow-500 hover:bg-zinc-750 text-zinc-300 hover:text-white px-5 py-2.5 rounded-sm font-mono font-bold text-xs tracking-wider transition-all active:scale-95 cursor-pointer"
+                 aria-label="Tisk slovíček"
+               >
+                 <Printer size={16} />
+                 <span>PRINT VOCABULARY</span>
+               </button>
+             </div>
           </div>
         )}
 
@@ -850,6 +863,14 @@ export default function App() {
               </Button>
             </div>
           </div>
+        )}
+
+        {/* PRINT VIEW STATE */}
+        {gameState === GameState.PRINT_VIEW && selectedLesson && (
+          <VocabularyPrintView 
+            lesson={selectedLesson}
+            onBack={() => setGameState(GameState.MODE_SELECT)}
+          />
         )}
 
         {/* ERROR STATE */}
