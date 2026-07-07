@@ -8,6 +8,7 @@ import QuizCard from './components/QuizCard';
 import Flashcard from './components/Flashcard';
 import Button from './components/Button';
 import VocabularyPrintView from './components/VocabularyPrintView';
+import LessonStudySheetView from './components/LessonStudySheetView';
 import { Users, Star, RotateCcw, Award, Play, Signal, QrCode, X, ArrowLeft, Globe, BookOpen, Music, MapPin, Grid, Smile, Shirt, Utensils, RefreshCw, Building2, Tent, Laptop, Trophy, Home, Map, GraduationCap, ChevronLeft, ChevronRight, Wrench, Hammer, Mountain, Clapperboard, CloudLightning, Briefcase, Plane, CreditCard, Siren, Microscope, Sunset, Info, CloudRain, IdCard, Clock, PawPrint, Printer } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -686,15 +687,24 @@ export default function App() {
                 </button>
              </div>
 
-             {/* Print View Button */}
-             <div className="mt-8 flex justify-center">
+             {/* Print Actions Row */}
+             <div className="mt-8 flex flex-col sm:flex-row justify-center gap-4">
                <button
                  onClick={() => setGameState(GameState.PRINT_VIEW)}
-                 className="flex items-center gap-2 bg-zinc-800/80 border border-zinc-700 hover:border-yellow-500 hover:bg-zinc-750 text-zinc-300 hover:text-white px-5 py-2.5 rounded-sm font-mono font-bold text-xs tracking-wider transition-all active:scale-95 cursor-pointer"
+                 className="flex items-center justify-center gap-2 bg-zinc-800/80 border border-zinc-700 hover:border-yellow-500 hover:bg-zinc-750 text-zinc-300 hover:text-white px-5 py-2.5 rounded-sm font-mono font-bold text-xs tracking-wider transition-all active:scale-95 cursor-pointer"
                  aria-label="Tisk slovíček"
                >
                  <Printer size={16} />
                  <span>PRINT VOCABULARY</span>
+               </button>
+               
+               <button
+                 onClick={() => setGameState(GameState.STUDY_SHEET_VIEW)}
+                 className="flex items-center justify-center gap-2 bg-zinc-800/80 border border-zinc-700 hover:border-yellow-500 hover:bg-zinc-750 text-zinc-300 hover:text-white px-5 py-2.5 rounded-sm font-mono font-bold text-xs tracking-wider transition-all active:scale-95 cursor-pointer"
+                 aria-label="Tisk pracovního listu"
+               >
+                 <BookOpen size={16} />
+                 <span>PRINT WORKSHEET</span>
                </button>
              </div>
           </div>
@@ -873,6 +883,14 @@ export default function App() {
           />
         )}
 
+        {/* STUDY SHEET VIEW STATE */}
+        {gameState === GameState.STUDY_SHEET_VIEW && selectedLesson && (
+          <LessonStudySheetView 
+            lesson={selectedLesson}
+            onBack={() => setGameState(GameState.MODE_SELECT)}
+          />
+        )}
+
         {/* ERROR STATE */}
         {gameState === GameState.ERROR && (
           <div className="text-center bg-zinc-800 p-8 rounded-md border border-red-900 shadow-xl max-w-sm">
@@ -993,19 +1011,21 @@ export default function App() {
                    <div className="mb-6">
                       <h4 className="text-yellow-500 font-mono font-bold mb-2 uppercase border-b border-zinc-700 pb-1 flex items-center gap-2">
                           <Printer size={18} />
-                          TISK SLOVÍČEK K LEKCI
+                          TISK SLOVÍČEK A PRACOVNÍCH LISTŮ
                        </h4>
-                       <p className="mb-2">Učitel si může rychle vytisknout slovíčka z vybrané lekce pro práci v hodině, suplování nebo pro žáky bez telefonu.</p>
+                       <p className="mb-2">Učitel si může rychle vytisknout materiály z vybrané lekce pro práci v hodině, suplování nebo pro žáky bez telefonu.</p>
+                       <strong className="text-zinc-200 block mb-1">Dvě možnosti tisku:</strong>
+                       <ul className="list-disc ml-5 mb-3 space-y-1">
+                          <li><strong className="text-zinc-100">PRINT VOCABULARY:</strong> Vytiskne čistý a přehledný slovníček dané lekce se sloupcem „Umím“ a místem pro poznámky.</li>
+                          <li><strong className="text-zinc-100">PRINT WORKSHEET:</strong> Vytvoří a vytiskne připravený pracovní list (Worksheet) ke slovíčkům lekce. Obsahuje spojování pojmů, doplňování překladů a prostor pro vlastní věty.</li>
+                       </ul>
                        <strong className="text-zinc-200 block mb-1">Postup:</strong>
                        <ol className="list-decimal ml-5 mb-3 space-y-1">
-                          <li>Vyberte učebnici nebo úroveň.</li>
-                          <li>Vyberte konkrétní lekci.</li>
-                          <li>Na obrazovce s volbou režimu (LEARN/TEST) klikněte na <strong className="font-mono text-xs bg-zinc-900 border border-zinc-700 px-1.5 py-0.5 rounded text-yellow-500">PRINT VOCABULARY</strong>.</li>
-                          <li>Otevře se tisková stránka se slovíčky dané lekce.</li>
-                          <li>Klikněte na <strong className="text-zinc-100">Vytisknout slovíčka</strong> (nebo použijte tisk v prohlížeči Ctrl+P).</li>
+                          <li>Vyberte učebnici nebo úroveň a konkrétní lekci.</li>
+                          <li>Na obrazovce s volbou režimu (LEARN/TEST) klikněte na jedno z tiskových tlačítek.</li>
+                          <li>Klikněte na tlačítko tisku v horní liště (nebo použijte Ctrl+P).</li>
                        </ol>
-                       <p className="mb-2"><strong>Tisková stránka obsahuje:</strong> anglické slovíčko, český překlad, políčko „Umím“ a prázdné místo na poznámky.</p>
-                       <p className="text-zinc-400 text-xs italic">Tisk funguje z lokálních dat aplikace (i offline) a neobsahuje žádné výsledky žáka, skóre ani osobní údaje.</p>
+                       <p className="text-zinc-400 text-xs italic">Tisk funguje offline z lokálních dat aplikace a nikdy neobsahuje žádné výsledky žáka, skóre ani osobní údaje.</p>
                     </div>
 
                    <div className="mb-6">
