@@ -1,27 +1,81 @@
-import React from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Lesson, VocabItem } from '../types';
 import Button from './Button';
-import { ArrowLeft, Printer } from 'lucide-react';
+import { ArrowLeft, Printer, RefreshCw } from 'lucide-react';
 
 interface LessonStudySheetViewProps {
   lesson: Lesson;
   onBack: () => void;
 }
 
+// Cryptographically secure shuffle with a standard Math.random fallback
+const secureShuffle = <T,>(array: T[]): T[] => {
+  const result = [...array];
+  const hasCrypto = typeof window !== 'undefined' && window.crypto && typeof window.crypto.getRandomValues === 'function';
+
+  for (let i = result.length - 1; i > 0; i--) {
+    let randomIndex: number;
+    if (hasCrypto) {
+      const randomArray = new Uint32Array(1);
+      window.crypto.getRandomValues(randomArray);
+      randomIndex = randomArray[0] % (i + 1);
+    } else {
+      randomIndex = Math.floor(Math.random() * (i + 1));
+    }
+    [result[i], result[randomIndex]] = [result[randomIndex], result[i]];
+  }
+  return result;
+};
+
 const LessonStudySheetView: React.FC<LessonStudySheetViewProps> = ({ lesson, onBack }) => {
   const vocabList = Array.isArray(lesson.content) ? (lesson.content as VocabItem[]) : [];
-  
-  // Limit worksheet to maximum of first 15 vocabulary words (stable & deterministic)
-  const totalWords = vocabList.slice(0, 15);
-  
-  // Distribute words to exercises safely
-  const task1Words = totalWords.slice(0, 8);
-  const task2Words = totalWords.slice(8, 11);
-  const task3Words = totalWords.slice(11, 15);
 
-  // Deterministic sorting for matching exercise (Task 1)
-  const englishSide = [...task1Words].sort((a, b) => a.term.localeCompare(b.term));
-  const czechSide = [...task1Words].sort((a, b) => a.translation.localeCompare(b.translation));
+  // State to hold the current stable variant of exercises
+  const [variant, setVariant] = useState<{
+    task1English: VocabItem[];
+    task1Czech: VocabItem[];
+    task2Words: VocabItem[];
+    task3Words: VocabItem[];
+  } | null>(null);
+
+  // Generate a randomized variant and save to state (prevents re-shuffling on re-render)
+  const generateVariant = useCallback(() => {
+    if (vocabList.length === 0) {
+      setVariant(null);
+      return;
+    }
+
+    // 1. Shuffle the full vocabulary pool
+    const shuffledPool = secureShuffle(vocabList);
+
+    // 2. Select up to 15 unique items for the worksheet
+    const selectedWords = shuffledPool.slice(0, 15);
+
+    // 3. Slice into exercise blocks
+    const task1 = selectedWords.slice(0, 8);
+    const task2 = selectedWords.slice(8, 11);
+    const task3 = selectedWords.slice(11, 15);
+
+    // 4. Shuffle matching exercise columns independently to mismatch them
+    const task1English = secureShuffle(task1);
+    const task1Czech = secureShuffle(task1);
+
+    // 5. Shuffle translate exercises order
+    const task2Words = secureShuffle(task2);
+    const task3Words = secureShuffle(task3);
+
+    setVariant({
+      task1English,
+      task1Czech,
+      task2Words,
+      task3Words,
+    });
+  }, [lesson.content]);
+
+  // Run on mount or when the lesson content changes
+  useEffect(() => {
+    generateVariant();
+  }, [generateVariant]);
 
   const handlePrint = () => {
     if (typeof window !== 'undefined' && typeof window.print === 'function') {
@@ -114,18 +168,24 @@ const LessonStudySheetView: React.FC<LessonStudySheetViewProps> = ({ lesson, onB
       ` }} />
 
       {/* HEADER CONTROLS (Hidden during printing) */}
-      <div className="no-print flex justify-between items-center mb-8 bg-zinc-800/80 border border-zinc-700 p-4 rounded-md shadow-md">
-        <Button onClick={onBack} variant="secondary" className="flex items-center gap-2">
+      <div className="no-print flex flex-col sm:flex-row justify-between items-center gap-4 mb-8 bg-zinc-800/80 border border-zinc-700 p-4 rounded-md shadow-md">
+        <Button onClick={onBack} variant="secondary" className="w-full sm:w-auto flex items-center justify-center gap-2">
           <ArrowLeft size={18} /> Zpět do lekce
         </Button>
         
-        <h2 className="text-xl font-mono font-bold text-yellow-500 hidden md:block">
+        <h2 className="text-xl font-mono font-bold text-yellow-500 hidden lg:block">
           WORKSHEET PREVIEW
         </h2>
 
-        <Button onClick={handlePrint} variant="primary" className="flex items-center gap-2">
-          <Printer size={18} /> Vytisknout pracovní list
-        </Button>
+        <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+          <Button onClick={generateVariant} variant="secondary" className="w-full sm:w-auto flex items-center justify-center gap-2">
+            <RefreshCw size={18} /> Nová verze / New version
+          </Button>
+
+          <Button onClick={handlePrint} variant="primary" className="w-full sm:w-auto flex items-center justify-center gap-2">
+            <Printer size={18} /> Vytisknout pracovní list
+          </Button>
+        </div>
       </div>
 
       {/* PRINT SHEET WRAPPER */}
@@ -148,6 +208,10 @@ const LessonStudySheetView: React.FC<LessonStudySheetViewProps> = ({ lesson, onB
               </span>
             )}
           </div>
+          {/* Variant Info Alert (hidden on print) */}
+          <p className="text-zinc-500 text-[10px] font-mono mt-2 uppercase tracking-wide no-print">
+            [ Varianta se vytváří lokálně z aktuální lekce a nikam se neukládá ]
+          </p>
         </div>
 
         {/* Paper blank fields for Student name and Date */}
@@ -162,7 +226,7 @@ const LessonStudySheetView: React.FC<LessonStudySheetViewProps> = ({ lesson, onB
           </div>
         </div>
 
-        {vocabList.length === 0 ? (
+        {vocabList.length === 0 || !variant ? (
           <div className="text-center py-12 text-zinc-400 font-mono">
             Pro tuto lekci nejsou dostupná žádná slovíčka pro pracovní list.
           </div>
@@ -170,7 +234,7 @@ const LessonStudySheetView: React.FC<LessonStudySheetViewProps> = ({ lesson, onB
           <div className="space-y-8">
             
             {/* TASK 1: Match English and Czech */}
-            {task1Words.length > 0 && (
+            {variant.task1English.length > 0 && (
               <div className="space-y-3">
                 <h3 className="text-lg font-mono font-bold text-yellow-500 border-b border-zinc-700 pb-1 print-title">
                   Task 1: Match English and Czech
@@ -179,9 +243,9 @@ const LessonStudySheetView: React.FC<LessonStudySheetViewProps> = ({ lesson, onB
                   Přiřaď správná čísla z levého sloupce do rámečků v pravém sloupci. / Match the numbers from the left column to the boxes in the right column.
                 </p>
                 <div className="grid grid-cols-2 gap-8 border border-zinc-700/60 p-4 rounded-md print-table">
-                  {/* English list (A-Z sorted) */}
+                  {/* English list */}
                   <div className="space-y-3">
-                    {englishSide.map((item, idx) => (
+                    {variant.task1English.map((item, idx) => (
                       <div key={idx} className="font-mono text-sm text-zinc-200 print-text">
                         <span className="font-bold inline-block w-6 text-yellow-500 print-title">{idx + 1}.</span>
                         <span translate="no">{item.term}</span>
@@ -189,9 +253,9 @@ const LessonStudySheetView: React.FC<LessonStudySheetViewProps> = ({ lesson, onB
                     ))}
                   </div>
                   
-                  {/* Czech list (A-Z sorted translations with empty boxes) */}
+                  {/* Czech list (shuffled translations with empty boxes) */}
                   <div className="space-y-3">
-                    {czechSide.map((item, idx) => (
+                    {variant.task1Czech.map((item, idx) => (
                       <div key={idx} className="font-mono text-sm text-zinc-200 print-text flex items-center gap-2">
                         <span className="inline-block w-8 h-6 border border-zinc-500 rounded-sm flex items-center justify-center print-table text-zinc-600 bg-transparent text-xs font-bold font-mono">
                           &nbsp;&nbsp;&nbsp;
@@ -205,7 +269,7 @@ const LessonStudySheetView: React.FC<LessonStudySheetViewProps> = ({ lesson, onB
             )}
 
             {/* TASK 2: Fill in Czech */}
-            {task2Words.length > 0 && (
+            {variant.task2Words.length > 0 && (
               <div className="space-y-3">
                 <h3 className="text-lg font-mono font-bold text-yellow-500 border-b border-zinc-700 pb-1 print-title">
                   Task 2: Translate to Czech
@@ -222,7 +286,7 @@ const LessonStudySheetView: React.FC<LessonStudySheetViewProps> = ({ lesson, onB
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-zinc-700/50 print-table">
-                      {task2Words.map((item, idx) => (
+                      {variant.task2Words.map((item, idx) => (
                         <tr key={idx} className="text-zinc-200 print-table">
                           <td className="py-3 px-4 font-mono font-bold tracking-wide print-table" translate="no">
                             {item.term}
@@ -239,7 +303,7 @@ const LessonStudySheetView: React.FC<LessonStudySheetViewProps> = ({ lesson, onB
             )}
 
             {/* TASK 3: Fill in English */}
-            {task3Words.length > 0 && (
+            {variant.task3Words.length > 0 && (
               <div className="space-y-3">
                 <h3 className="text-lg font-mono font-bold text-yellow-500 border-b border-zinc-700 pb-1 print-title">
                   Task 3: Translate to English
@@ -256,7 +320,7 @@ const LessonStudySheetView: React.FC<LessonStudySheetViewProps> = ({ lesson, onB
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-zinc-700/50 print-table">
-                      {task3Words.map((item, idx) => (
+                      {variant.task3Words.map((item, idx) => (
                         <tr key={idx} className="text-zinc-200 print-table">
                           <td className="py-3 px-4 font-mono print-table" lang="cs">
                             {item.translation}
