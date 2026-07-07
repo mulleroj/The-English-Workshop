@@ -41,7 +41,8 @@ export enum GameState {
   PLAYING = 'PLAYING',
   GAME_OVER = 'GAME_OVER',
   ERROR = 'ERROR',
-  PRINT_VIEW = 'PRINT_VIEW'
+  PRINT_VIEW = 'PRINT_VIEW',
+  STUDY_SHEET_VIEW = 'STUDY_SHEET_VIEW'
 }
 
 export interface PlayerStats {
